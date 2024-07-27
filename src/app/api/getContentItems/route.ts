@@ -2,8 +2,6 @@
 import { Client, Playlist } from "youtubei";
 import { NextResponse } from "next/server";  
 
- 
-
 const youtube = new Client();
 
 async function getPlaylist(playlistId: string) { 
