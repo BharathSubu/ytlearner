@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "pages:build" : "npx @cloudflare/next-on-pages"
   },
   "dependencies": {
     "@blocknote/core": "^0.14.5",
@@ -50,6 +51,7 @@
     "youtubei": "^1.5.4"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.12.1",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",

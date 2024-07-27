@@ -1,6 +1,8 @@
 
 import SideBar from "@/components/SideBar";  
 
+export const runtime = 'edge';
+
 const Layout =   ({
     params,
     children,
