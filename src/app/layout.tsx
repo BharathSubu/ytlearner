@@ -6,6 +6,7 @@ import { NavBar } from "@/components/navbar";
 import NextTopLoader from "nextjs-toploader";
 import { Providers } from "./providers"; 
 import type { Metadata } from "next";
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 // import { Pomodoro } from "@/components/pomodoro";
 import dynamic from "next/dynamic";
@@ -40,6 +41,7 @@ export default function RootLayout({
       >
         <Providers>
           <header>
+          <SpeedInsights/>
           <NavBar />
           <NextTopLoader color="#2E78C7" height={2} />
           </header>
