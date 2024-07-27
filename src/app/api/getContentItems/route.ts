@@ -2,14 +2,10 @@
 import { Client, Playlist } from "youtubei";
 import { NextResponse } from "next/server";  
 
-export const runtime = 'edge';
-
 const youtube = new Client();
 
-
-
 async function getPlaylist(playlistId: string) { 
-
+  console.log("playlistId");
   const playlist: Playlist = await youtube.getPlaylist(playlistId as string); 
    
   const jsonPlaylist = {
