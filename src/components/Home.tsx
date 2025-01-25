@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -11,8 +10,8 @@ import {
 import CourseInputForm  from "./CourseInputFormClient";
 import Courses from "./Courses";
 
-export default async function Home() {
-
+export default function Home() {
+  
   return (
     <main className="no-scrollbar mx-auto flex h-full max-w-screen-xl flex-col overflow-y-auto p-4 gap-4  text-lg">
        

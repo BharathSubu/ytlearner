@@ -14,6 +14,7 @@ export default function Courses() {
    
     async function fetchMyCourse() { 
       // await localDb.courses.clear();
+      console.log("fetching courses and loading course component");
       const fetchedCourses = await localDb.courses.toArray();
       setCourses(fetchedCourses); 
       console.log(fetchedCourses);
