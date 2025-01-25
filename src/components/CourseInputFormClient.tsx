@@ -38,7 +38,7 @@ export default function CourseInputForm() {
     }
 
     setError("");
-    const response = await fetch('/api/getContentItems', {
+    const response = await fetch('https://youtube-api.bharathsubu2002.workers.dev/playlist', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
