@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 
 import { Course } from "@/components/Course";
 

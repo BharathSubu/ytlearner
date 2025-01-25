@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 
 import SideBar from "@/components/SideBar";  
  
