@@ -1,3 +1,6 @@
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
+import { AppState, BinaryFiles } from "@excalidraw/excalidraw/types/types";
+
 export interface ICourse {
     id: number;
     name: string;
@@ -24,8 +27,14 @@ export interface Todo {
 }
 
 export interface IEditor  {
-    document: string,
-    whiteboard: string
+    document?: string, 
+    whiteboardFiles? : ExcalidrawElementFiles
+}
+
+export interface ExcalidrawElementFiles {
+    excalidrawElement: string,
+    excalidrawElementFiles: string,
+    excalidrawState?: string,
 }
 
 export interface IThumbnail {

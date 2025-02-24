@@ -1,121 +1,110 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Excalidraw, MainMenu, WelcomeScreen } from "@excalidraw/excalidraw";  
-import { ICourse, IEditor } from "@/lib/types";
+import { ExcalidrawElementFiles, IEditor } from "@/lib/types";
 import localDb from "@/lib/database.config";
 
-const EditorBoard =  ({
+const EditorBoard = ({
     onSaveTrigger,
     courseId,
     courseItemId,
-    fileData
-  }: {
+    fileData,
+    key
+}: {
     onSaveTrigger: any;
     courseId: any;
     courseItemId: any;
-    fileData: IEditor; 
-  }) => {
-  const [whiteBoard, setWhiteBoard] = useState<any>( );
+    key : any;
+    fileData: IEditor;
+}) => {
+    const [whiteBoard, setWhiteBoard] = useState<ExcalidrawElementFiles>();
+    const whiteBoardRef = useRef<ExcalidrawElementFiles>(); // Store the current state without causing re-renders
 
-  useEffect(() => {
+    useEffect(() => {
+        if (!fileData || !fileData.whiteboardFiles) {
+            console.warn("fileData or fileData.whiteboard is undefined");
+            setWhiteBoard(undefined);
+            return;
+        }
 
-    if ( !fileData || !fileData.whiteboard ) {
-        console.warn('fileData or fileData.whiteboard is undefined');
-        setWhiteBoard(undefined);
-        return;
-    }
+        async function loadFromStorage() {
+            return fileData.whiteboardFiles;
+        }
 
-    async function loadFromStorage() {
-        const storageString =  fileData.whiteboard ;
-        return storageString
-          ? (await JSON.parse(storageString) )
-          : undefined;
-    } 
+        loadFromStorage().then((content) => {
+            setWhiteBoard(content);
+            whiteBoardRef.current = content; // Update ref without re-rendering
+        });
 
-    loadFromStorage().then((content) => {
-        setWhiteBoard(content);
-    });  
-    console.log("Document for whiteboard loaded");
+        console.log("Document for whiteboard loaded");
+    }, [fileData,key]);
 
-  }, [fileData]);
+    const saveWhiteboard = async () => {
+        if (!whiteBoardRef.current) return;
 
-  //const updateWhiteBoard = useMutation(api.files.updateWhiteboard);
+        let course = await localDb.courses.where("id").equals(parseInt(courseId)).first();
+        if (course) {
+            course.courseItems[parseInt(courseItemId)].editor.whiteboardFiles = whiteBoardRef.current;
+            await localDb.courses.update(parseInt(courseId), course as any);
+            console.log("Saved whiteboard", whiteBoardRef.current);
+        }
+    };
 
-  const saveWhiteboard = async () => { 
-    let course = await localDb.courses.where("id").equals(parseInt(courseId)).first();
-    // course!.courseItems[parseInt(courseItemId)].editor?.whiteboard = JSON.stringify(whiteBoard);
-    course!.courseItems[parseInt(courseItemId)].editor.whiteboard = JSON.stringify(whiteBoard);
-    console.log(whiteBoard);
-    await localDb.courses.update(parseInt(courseId), course as any);
-  };
+    // Debounced Save function (prevents excessive re-renders)
+    // ignore ts check
+    // @ts-ignore
+    const handleWhiteboardChange = (excaliDrawElements, appState, files) => {
+        const scene: ExcalidrawElementFiles = {
+            excalidrawElement: JSON.stringify([...excaliDrawElements]),
+            excalidrawState: JSON.stringify(appState),
+            excalidrawElementFiles: JSON.stringify(files),
+        };
+        console.log("handleWhiteboardChange", scene);
+        console.log("FIles");
+        console.log(files);
+        console.log(excaliDrawElements);
 
-   
+        // Only update if the new state is different from the old one
+        if (JSON.stringify(scene) !== JSON.stringify(whiteBoardRef.current)) {
+            setWhiteBoard(scene);
+            whiteBoardRef.current = scene;
+            console.log("Updating whiteboard data", scene);
+            // Save with a slight delay (debounce)
+            setTimeout(saveWhiteboard, 500);
+        }
+    };
 
-  return (
-    <>
-      <div className="h-full w-full">
-        { whiteBoard ?  (
-          <Excalidraw
-            theme="dark"
-            initialData={{
-              elements: whiteBoard,
-            }}
-            UIOptions={{
-              canvasActions: {
-                export: false,
-                loadScene: false,
-                saveAsImage: false,
-              },
-            }}
-            onChange={(excaliDrawElements, appState, files) => {
-              setWhiteBoard(excaliDrawElements);
-              saveWhiteboard();
-            //   console.log(excaliDrawElements);
-            }}
-          >
-            <MainMenu>
-              <MainMenu.DefaultItems.ClearCanvas />
-              <MainMenu.DefaultItems.Help />
-              <MainMenu.DefaultItems.ChangeCanvasBackground />
-            </MainMenu>
-            <WelcomeScreen>
-              <WelcomeScreen.Hints.MenuHint />
-              <WelcomeScreen.Hints.ToolbarHint />
-              <WelcomeScreen.Hints.HelpHint />
-            </WelcomeScreen>
-          </Excalidraw>
-        ) : (
-          <Excalidraw
-            theme="dark"
-            UIOptions={{
-              canvasActions: {
-                export: false,
-                loadScene: false,
-                saveAsImage: false,
-              },
-            }}
-            onChange={(excaliDrawElements, appState, files) => {
-              setWhiteBoard(excaliDrawElements);
-              console.log("Files")
-              console.log(files);
-            }}
-          >
-            <MainMenu>
-              <MainMenu.DefaultItems.ClearCanvas />
-              <MainMenu.DefaultItems.Help />
-              <MainMenu.DefaultItems.ChangeCanvasBackground />
-            </MainMenu>
-            <WelcomeScreen>
-              <WelcomeScreen.Hints.MenuHint />
-              <WelcomeScreen.Hints.ToolbarHint />
-              <WelcomeScreen.Hints.HelpHint />
-            </WelcomeScreen>
-          </Excalidraw>
-        )}
-      </div>
-    </>
-  );
+    return (
+        <div className="h-full w-full">
+            <Excalidraw
+                theme="dark"
+                initialData={whiteBoard ? {
+                    elements: JSON.parse(whiteBoard.excalidrawElement),
+                    files: JSON.parse(whiteBoard.excalidrawElementFiles)
+                } : undefined}
+                UIOptions={{
+                    canvasActions: {
+                        export: false,
+                        loadScene: false,
+                        saveAsImage: false,
+                    },
+                }}
+                onChange={handleWhiteboardChange}
+            >
+                <MainMenu>
+                    <MainMenu.DefaultItems.ClearCanvas />
+                    <MainMenu.DefaultItems.Help />
+                    <MainMenu.DefaultItems.ChangeCanvasBackground />
+                </MainMenu>
+                <WelcomeScreen>
+                    <WelcomeScreen.Hints.MenuHint />
+                    <WelcomeScreen.Hints.ToolbarHint />
+                    <WelcomeScreen.Hints.HelpHint />
+                </WelcomeScreen>
+            </Excalidraw>
+        </div>
+    );
 };
 
 export default EditorBoard;

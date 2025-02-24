@@ -6,20 +6,20 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import localDb from "@/lib/database.config";
-import { ICourseItem } from "@/lib/types";  
-import React from 'react'; 
+import { ICourseItem } from "@/lib/types";
+import React from "react";
 import { redirect } from "next/navigation";
 
 export default function CourseInputForm() {
   const [error, setError] = useState("");
 
-  const handleAction = async (event: FormData) => { 
+  const handleAction = async (event: FormData) => {
     //   await localDb.courses.where('id').equals(36).delete();
     //   const courses = await localDb.courses.toArray();
     //   console.log(courses);
     const name = event.get("name") as string;
     const url = event.get("url") as string;
-      console.log(event)
+    console.log(event);
     if (!name.trim()) {
       setError("Name is required.");
       return;
@@ -31,54 +31,72 @@ export default function CourseInputForm() {
     }
 
     const getPlayListId = extractPlaylistId(url);
-
-    if (!getPlayListId) {
+    const getVideoId = extractVideoId(url);
+    let response;
+    if (getPlayListId) {
+      response = await fetch(
+        "https://youtube-api.bharathsubu2002.workers.dev/playlist",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ playlistId: getPlayListId }),
+        }
+      );
+    } else if (getVideoId) {
+      response = await fetch(
+        "https://youtube-api.bharathsubu2002.workers.dev/video",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ videoId: getVideoId }),
+        }
+      ); 
+    } else {
       setError("Invalid URL");
       return;
     }
-
     setError("");
-    const response = await fetch('https://youtube-api.bharathsubu2002.workers.dev/playlist', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ "playlistId" : getPlayListId }),
-    });
 
     console.log(response);
     const data = await response.json();
     console.log(data);
- 
+
     if (data.status !== "success") {
       setError("Invalid URL");
       return;
     }
 
     console.log("localDb");
-     
-      const id = await localDb.courses.add({
-        name: name,
-        url: url, 
-        courseItems: [],
-        progress: 0,
-        thumbnail: [], 
-      });
-     
-    
+
+    const id = await localDb.courses.add({
+      name: name,
+      url: url,
+      courseItems: [],
+      progress: 0,
+      thumbnail: [],
+    });
+
     console.log("Id of the insered course");
     console.log(id);
-    
+
     const courseItems: ICourseItem[] = data.playlist.videos.map(
       (video: { id: any; name: any }) => ({
         id: video.id,
         name: video.name,
         iscompleted: false,
         parentCourseId: id,
-        isVideo: true, 
+        isVideo: true,
         editor: {
           document: "",
-          whiteboard: "",
+          whiteboardFiles: {
+            excalidrawElement: "",
+            excalidrawElementFiles: "",
+            excalidrawState: "",
+          },
         },
       })
     );
@@ -98,16 +116,15 @@ export default function CourseInputForm() {
     try {
       // await localDb.courses.update(id, {
       //   courseItems: courseItems,
-      //   thumbnail: thumbnail,  
+      //   thumbnail: thumbnail,
       // });
       console.log("course");
       // console.log(course);
-      
-      await localDb.courses.update(id, (course,ctx) => {
 
+      await localDb.courses.update(id, (course, ctx) => {
         console.log(course);
-        
-        if(course){
+
+        if (course) {
           course.courseItems = courseItems;
           course.thumbnail = thumbnail;
           return true;
@@ -122,10 +139,9 @@ export default function CourseInputForm() {
 
     const course = await localDb.courses.get(id);
     console.log("course afte update");
-    console.log(course); 
-     
-    redirect(`/courses/${id}/0`);
+    console.log(course);
 
+    redirect(`/courses/${id}/0`);
   };
 
   function extractPlaylistId(url: string) {
@@ -134,9 +150,18 @@ export default function CourseInputForm() {
     if (match && match[1]) {
       return match[1];
     }
-    return null; // Return null if no match is found
+    return null; 
   }
 
+  //fucntion to get VideoId from youtubeVideos
+  function extractVideoId(url: string) {
+    var regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    var match = url.match(regExp);
+    if (match && match[2].length == 11) {
+      return match[2];
+    }
+    return null;  
+  }
 
   return (
     <form action={handleAction}>
@@ -162,7 +187,7 @@ export default function CourseInputForm() {
             placeholder="Youtube Url"
             className="col-span-3"
           />
-        </div> 
+        </div>
         <span className="text-sm text-red-600 ">{error}</span>
       </div>
       <DialogFooter>

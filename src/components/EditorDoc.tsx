@@ -63,7 +63,20 @@ const EditorDoc = ({
     if (initialContent === "loading") {
       return undefined;
     }
-    return BlockNoteEditor.create({ initialContent });
+    return BlockNoteEditor.create({ 
+      initialContent : initialContent,
+      uploadFile: async (file) => {
+        console.log("Uploading file");
+        console.log(file);
+        const fileData = await file.arrayBuffer();
+        const base64String = btoa(
+          new Uint8Array(fileData)
+            .reduce((data, byte) => data + String.fromCharCode(byte), "")
+        );
+    
+        return `data:${file.type};base64,${base64String}`;
+      }
+    });
   }, [initialContent]);
 
   if (editor === undefined) {

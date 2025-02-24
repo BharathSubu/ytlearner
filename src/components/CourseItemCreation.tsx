@@ -4,7 +4,7 @@
  * Documentation: https://v0.dev/docs#integrating-generated-code-into-your-nextjs-app
  */
 "use client";
-import { v4 as uuidv4 } from 'uuid'; 
+import { v4 as uuidv4 } from "uuid";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
@@ -21,33 +21,34 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import localDb, { invalidateCache } from "@/lib/database.config";
 import { redirect } from "next/navigation";
 import { ICourseItem } from "@/lib/types";
-import { PartialBlock } from '@blocknote/core';
-import { ExcalidrawElement } from '@excalidraw/excalidraw/types/element/types';
+import { PartialBlock } from "@blocknote/core";
+import { ExcalidrawElement } from "@excalidraw/excalidraw/types/element/types";
 
-export default function CourseItemCreation( props : { courseId: string }) {
+export default function CourseItemCreation(props: { courseId: string }) {
+  const [isOpen, setIsOpen] = useState(false);
 
-  const [isOpen, setIsOpen] = useState(false); 
-
-  return (  
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogTitle><PlusIcon onClick={() => setIsOpen(true)} className="mr-2" /></DialogTitle> 
-        <DialogContent>
-          <InputField courseId={props.courseId} />
-        </DialogContent>
-      </Dialog> 
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTitle>
+        <PlusIcon onClick={() => setIsOpen(true)} className="mr-2" />
+      </DialogTitle>
+      <DialogContent>
+        <InputField courseId={props.courseId} />
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function InputField( props : { courseId: string})  {
+function InputField(props: { courseId: string }) {
   const [error, setError] = useState("");
-  const [selectedOption, setSelectedOption] = useState("youtube"); 
-  
-  const handleAction = async (event: FormData) => { 
+  const [selectedOption, setSelectedOption] = useState("youtube");
+
+  const handleAction = async (event: FormData) => {
     const name = event.get("name") as string;
     const videoUrl = event.get("videoUrl") as string;
     const id = parseInt(props.courseId);
     if (selectedOption === "youtube") {
-      const videoId = extractYouTubeVideoId(videoUrl) ;
+      const videoId = extractYouTubeVideoId(videoUrl);
       if (!videoId) {
         console.log("Invalid YouTube URL");
         console.log(props.courseId);
@@ -63,20 +64,22 @@ function InputField( props : { courseId: string})  {
           isVideo: true,
           editor: {
             document: "",
-            whiteboard: "",
-          }, 
+            whiteboardFiles: {
+              excalidrawElement: "",
+              excalidrawElementFiles: "",
+              excalidrawState: "",
+            },
+          },
         },
         ...(await localDb.courses.get(id))!.courseItems,
       ];
 
       await localDb.courses.update(id, {
-        courseItems:  newCourseItem,
-      }); 
+        courseItems: newCourseItem,
+      });
 
       redirect(`/courses/${id}/0`);
-    }
-    else { 
-
+    } else {
       const newCourseItem: ICourseItem[] = [
         {
           id: uuidv4(),
@@ -86,40 +89,53 @@ function InputField( props : { courseId: string})  {
           isVideo: false,
           editor: {
             document: "",
-            whiteboard: JSON.stringify([] as ExcalidrawElement[]),
-            // whiteboard: "",
           },
         },
         ...(await localDb.courses.get(id))!.courseItems,
       ];
 
       await localDb.courses.update(id, {
-        courseItems:  newCourseItem,
-      }); 
+        courseItems: newCourseItem,
+      });
 
       invalidateCache();
       redirect(`/courses/${id}/0`);
     }
   };
 
-  function extractYouTubeVideoId(url : string) {
-    const match = url.match(/[?&]v=([^&#]+)/);
-    return match ? match[1] : null;
+  function extractYouTubeVideoId(url: string) {
+    var regExp =
+      /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+    var match = url.match(regExp);
+    if (match && match[2].length == 11) {
+      return match[2];
+    }
+    return null;
   }
 
-  return  (
+  return (
     <form action={handleAction} className="space-y-6 p-2 ">
       <div className="space-y-2">
-        <Label htmlFor="name" className="block text-lg font-medium text-gray-700">Title</Label>
-        <Input 
-          id="name" 
-          name="name" 
-          placeholder="PlayList Name" 
+        <Label
+          htmlFor="name"
+          className="block text-lg font-medium text-gray-700"
+        >
+          Title
+        </Label>
+        <Input
+          id="name"
+          name="name"
+          placeholder="PlayList Name"
           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor='url' className="block text-lg font-medium text-gray-700">Content Type</Label>
+        <Label
+          htmlFor="url"
+          className="block text-lg font-medium text-gray-700"
+        >
+          Content Type
+        </Label>
         <RadioGroup
           value={selectedOption}
           onValueChange={setSelectedOption}
@@ -127,17 +143,26 @@ function InputField( props : { courseId: string})  {
         >
           <div className="flex items-center gap-2">
             <RadioGroupItem value="youtube" id="youtube" className="h-5 w-5" />
-            <Label htmlFor="youtube" className="text-gray-700">YouTube Video</Label>
+            <Label htmlFor="youtube" className="text-gray-700">
+              YouTube Video
+            </Label>
           </div>
           <div className="flex items-center gap-2">
             <RadioGroupItem value="canvas" id="canvas" className="h-5 w-5" />
-            <Label htmlFor="canvas" className="text-gray-700">Canvas Page</Label>
+            <Label htmlFor="canvas" className="text-gray-700">
+              Canvas Page
+            </Label>
           </div>
         </RadioGroup>
       </div>
       {selectedOption === "youtube" && (
         <div className="space-y-2">
-          <Label htmlFor="videoUrl" className="block text-lg font-medium text-gray-700">YouTube Video URL</Label>
+          <Label
+            htmlFor="videoUrl"
+            className="block text-lg font-medium text-gray-700"
+          >
+            YouTube Video URL
+          </Label>
           <Input
             id="videoUrl"
             placeholder="Enter a YouTube video URL"
@@ -148,7 +173,10 @@ function InputField( props : { courseId: string})  {
         </div>
       )}
       <DialogFooter className="flex justify-end">
-        <Button type="submit" className="px-4 py-2   rounded-md  focus:outline-none focus:ring-2 ">
+        <Button
+          type="submit"
+          className="px-4 py-2   rounded-md  focus:outline-none focus:ring-2 "
+        >
           Create Course
         </Button>
       </DialogFooter>

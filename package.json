@@ -12,9 +12,9 @@
     "deploy": "npm run pages:build && wrangler pages deploy"
   },
   "dependencies": {
-    "@blocknote/core": "^0.14.5",
-    "@blocknote/mantine": "^0.14.6",
-    "@blocknote/react": "^0.14.6",
+    "@blocknote/core": "^0.24.1",
+    "@blocknote/mantine": "0.24.1",
+    "@blocknote/react": "0.24.1",
     "@codesweetly/react-youtube-playlist": "^2.0.0",
     "@editorjs/checklist": "^1.6.0",
     "@editorjs/editorjs": "^2.30.2",
