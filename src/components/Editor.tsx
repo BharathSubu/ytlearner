@@ -6,16 +6,16 @@ import { IEditor } from "@/lib/types";
 import { useParams } from "next/navigation";
 import localDb from "@/lib/database.config";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "./ui/resizable";
-import EditorBoard from "./EditorBoard";
-import EditorDoc from "./EditorDoc";
+// import EditorBoard from "./EditorBoard";
+// import EditorDoc from "./EditorDoc";
 
-// const EditorDoc = dynamic(() => import("./EditorDoc"), {
-//   ssr: false,
-// });
+const EditorDoc = dynamic(() => import("./EditorDoc"), {
+  ssr: false,
+});
 
-// const EditorBoard = dynamic(() => import("./EditorBoard"), {
-//   ssr: false,
-// });
+const EditorBoard = dynamic(() => import("./EditorBoard"), {
+  ssr: false,
+});
 
 export function Editor({
   courseId,
